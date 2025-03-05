@@ -1,4 +1,4 @@
-<!--version 0.0-->
+<!--version 0.1-->
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -10,13 +10,41 @@
             font-family: Arial, sans-serif;
             text-align: center;
             margin: 50px;
-            transition: background-color 2s ease-in-out; /* Transition de fond sur 2 secondes */
+            transition: background-color 2s ease-in-out; /* Transition de fond */
         }
+
         .info-batterie {
             font-size: 1.5em;
             margin-top: 20px;
             padding: 10px;
             border-radius: 8px;
+            background-color: #f0f0f0;
+        }
+
+        .indicateur-batterie {
+            width: 100px;
+            height: 40px;
+            border: 2px solid #000;
+            border-radius: 5px;
+            position: relative;
+            margin: 20px auto;
+        }
+
+        .niveau-batterie {
+            height: 100%;
+            background-color: #2E7D32;
+            width: 0%;
+            transition: width 0.5s ease-in-out;
+        }
+
+        @media (max-width: 600px) {
+            body {
+                margin: 20px;
+            }
+
+            .info-batterie {
+                font-size: 1.2em;
+            }
         }
     </style>
 </head>
@@ -25,10 +53,9 @@
     <div class="info-batterie" id="niveau-batterie">Niveau de batterie : Inconnu</div>
     <div class="info-batterie" id="etat-charge">État de charge : Inconnu</div>
     <div class="info-batterie" id="temps-restant">Temps restant : Inconnu</div>
-
-    <!-- Audio pour branchement et débranchement -->
-    <audio id="son-branchement" src="branche.wav" preload="auto"></audio>
-    <audio id="son-debranchement" src="debranche.wav" preload="auto"></audio>
+    <div class="indicateur-batterie">
+        <div class="niveau-batterie" id="barre-niveau-batterie"></div>
+    </div>
 
     <script>
         if (navigator.getBattery) {
@@ -43,101 +70,88 @@
                     // Mise à jour du texte et du fond
                     niveauElement.textContent = `Niveau de batterie : ${niveauBatterie}%`;
                     niveauElement.style.backgroundColor = `rgb(${rouge}, ${vert}, 100)`;
-                    
+
+                    // Mise à jour de la barre de niveau de batterie
+                    document.getElementById("barre-niveau-batterie").style.width = `${niveauBatterie}%`;
+
+                    // Mise à jour de l'état de charge
                     document.getElementById("etat-charge").textContent = "État de charge : " + (batterie.charging ? "En charge ⚡" : "Sur batterie 🔋");
 
+                    // Mise à jour du temps restant
                     let texteTempsRestant = "";
                     let heureEstimee = "";
 
                     if (batterie.charging) {
-                        // Si la batterie est en charge, on affiche le temps restant pour la charge
                         texteTempsRestant = batterie.chargingTime === Infinity ? 
                         "Temps restant pour la charge : Estimation non disponible ⏳" : 
-                        `Temps restant pour la charge : ${Math.round(batterie.chargingTime / 60)} min`;
+                        `Temps restant pour la charge : ${formaterTempsRestant(batterie.chargingTime)}`;
 
-                        // Calcul de l'heure estimée pour la fin de la charge
                         if (batterie.chargingTime !== Infinity) {
                             heureEstimee = calculerHeureEstimee(batterie.chargingTime);
                         }
                     } else {
-                        // Si la batterie se décharge, on affiche le temps restant avant décharge
                         texteTempsRestant = batterie.dischargingTime === Infinity ? 
                         "Temps restant avant décharge : Estimation non disponible ⏳" : 
-                        `Temps restant avant décharge : ${Math.round(batterie.dischargingTime / 60)} min`;
+                        `Temps restant avant décharge : ${formaterTempsRestant(batterie.dischargingTime)}`;
 
-                        // Calcul de l'heure estimée pour la fin de la décharge
                         if (batterie.dischargingTime !== Infinity) {
                             heureEstimee = calculerHeureEstimee(batterie.dischargingTime);
                         }
                     }
 
-                    // Mise à jour du texte
                     document.getElementById("temps-restant").textContent = texteTempsRestant + (heureEstimee ? ` (${heureEstimee})` : "");
                 }
 
-                // Fonction pour calculer l'heure estimée
+                function formaterTempsRestant(tempsEnSecondes) {
+                    let heures = Math.floor(tempsEnSecondes / 3600);
+                    let minutes = Math.floor((tempsEnSecondes % 3600) / 60);
+                    return `${heures > 0 ? `${heures}h ` : ""}${minutes}min`;
+                }
+
                 function calculerHeureEstimee(tempsRestantEnSecondes) {
                     let maintenant = new Date();
                     let tempsRestantEnMillisecondes = tempsRestantEnSecondes * 1000;
                     let heureEstimee = new Date(maintenant.getTime() + tempsRestantEnMillisecondes);
 
-                    // Extraire l'heure et les minutes
                     let heures = heureEstimee.getHours();
                     let minutes = heureEstimee.getMinutes();
 
-                    // Formatage de l'heure en 'hh:mm'
                     return `${heures}h${minutes < 10 ? "0" : ""}${minutes}`;
                 }
 
-                // Fonction pour changer l'animation de fond lors du branchement/débranchement
                 function appliquerAnimationCharge(charging) {
                     let body = document.body;
-                    let sonBranchement = document.getElementById("son-branchement");
-                    let sonDebranchement = document.getElementById("son-debranchement");
-
                     if (charging) {
-                        // Si branché, on lance l'animation vers vert et le son de branchement
-                        body.style.backgroundColor = "#4CAF50";  // Vert
-                        sonBranchement.play();
+                        body.style.backgroundColor = "#4CAF50"; // Vert
                     } else {
-                        // Si débranché, on lance l'animation vers rouge uni et le son de débranchement
-                        body.style.backgroundColor = "#FF6666";  // Rouge uni
-                        sonDebranchement.play();
+                        body.style.backgroundColor = "#FF6666"; // Rouge
                     }
                 }
 
-                // Appliquer les changements à l'ouverture en fonction de l'état de charge
                 function appliquerEtatInitial() {
                     let body = document.body;
                     if (batterie.charging) {
                         body.style.backgroundColor = "#4CAF50"; // Vert
-                        document.getElementById("etat-charge").textContent = "État de charge : En charge ⚡";
-                        document.getElementById("son-branchement").play();
                     } else {
                         body.style.backgroundColor = "#FF6666"; // Rouge
-                        document.getElementById("etat-charge").textContent = "État de charge : Sur batterie 🔋";
-                        document.getElementById("son-debranchement").play();
                     }
                 }
 
                 // Appliquer l'état initial à l'ouverture de la page
                 appliquerEtatInitial();
-                
-                // Appelle la fonction pour mettre à jour l'état de la batterie dès que la page charge
                 mettreAJourBatterie(batterie);
 
-                // Ajoute les écouteurs d'événements pour mettre à jour l'interface lors des changements
+                // Ajouter les écouteurs d'événements
                 batterie.addEventListener('chargingchange', () => {
                     mettreAJourBatterie(batterie);
-                    appliquerAnimationCharge(batterie.charging); // Applique l'animation au changement d'état
+                    appliquerAnimationCharge(batterie.charging);
                 });
                 batterie.addEventListener('levelchange', () => mettreAJourBatterie(batterie));
                 batterie.addEventListener('chargingtimechange', () => mettreAJourBatterie(batterie));
                 batterie.addEventListener('dischargingtimechange', () => mettreAJourBatterie(batterie));
             });
         } else {
-            // Si l'API Battery Status n'est pas supportée, on affiche un message d'erreur
-            document.getElementById("niveau-batterie").textContent = "L'API Battery Status n'est pas supportée par votre navigateur. Veuillez mettre à jour votre navigateur.";
+            document.getElementById("niveau-batterie").textContent = "L'API Battery Status n'est pas supportée par votre navigateur.";
         }
     </script>
 </body>
