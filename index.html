@@ -1,4 +1,4 @@
-<!--version 0.2-->
+<!-- version 0.3 -->
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -16,6 +16,34 @@
         <div class="niveau-batterie" id="barre-niveau-batterie"></div>
     </div>
 
+    <h2>Expériences</h2>
+	<div class="experience" style="text-align: center;">
+		<div style="display: inline-flex; align-items: center;">
+			<label class="interrupteur">
+				<input type="checkbox" id="toggle-notification">
+				<span class="slider"></span>
+			</label>
+			<h3 style="margin-left: 10px;">Notification au débranchement du câble (000)</h3>
+		</div>
+		<div id="import-audio" style="display: none; margin-top: 10px;">
+			<input type="file" id="audio-file" accept="audio/*">
+			<p id="audio-status">Aucun fichier audio importé.</p>
+		</div>
+	</div>
+	<!-- Expérience : Effet de confetti à 100% -->
+    <div class="experience">
+        <div style="text-align: center;">
+            <div style="display: inline-flex; align-items: center;">
+                <label class="interrupteur">
+                    <input type="checkbox" id="toggle-confetti">
+                    <span class="slider"></span>
+                </label>
+                <h3 style="margin-left: 10px;">Effet de confetti à 100% (001)</h3>
+            </div>
+        </div>
+    </div>
+
     <script src="script.js"></script> <!-- Fichier JavaScript externe -->
+	<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script> <!-- Inclure Canvas Confetti -->
 </body>
 </html>
